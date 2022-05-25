@@ -1,29 +1,69 @@
 package sorting;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Main {
     public static void main(final String[] args) {
+        String full = "";
+        String inputFileName, outputFileName;
+        for (String arg : args) {
+            full+=" " + arg;
+        }
         String enter = "";
         String type = "";
-        for (String arg : args) {
+        Pattern pattern = Pattern.compile("(-sortingType)\\s?(\\w+)?");
+        Matcher sortType = pattern.matcher(full);
+        Matcher dataType = Pattern.compile("(-dataType)\\s?(\\w+)?").matcher(full);
+        Matcher nonType = Pattern.compile("-\\w+").matcher(full);
+        Matcher toFile = Pattern.compile("(-inputFile)\\s?([\\w.]+)").matcher(full);
+        Matcher outFile = Pattern.compile("(-outputFile)\\s?([\\w.]+)").matcher(full);
 
-            if (arg.equals("byCount")) {
-                type = "byCount"; break;
-            } else type = "natural";
+        if (sortType.find()) {
+            try {
+                if (sortType.group(2) == null) {
+                    throw new noSortingType("No sorting type defined!");
+                } else type = sortType.group(2);
+            } catch (noSortingType e) {
+
+            }
         }
-        for (String arg : args) {
-                if (arg.equals("long")) {
-                enter = "long";
+
+        if (dataType.find()) {
+            if (dataType.group(2) == null) {
+                System.out.println("No data type defined!");
             } else
-                if (arg.equals("line")) {
-                    enter = "line";
-                } else
-                if (arg.equals("word")) {
-                    enter = "word";
-                }
+            enter = dataType.group(2);
         }
-            switch (enter) {
+        while (nonType.find()) {
+            if (!nonType.group().equals("-sortingType") & !nonType.group().equals("-dataType") & !nonType.group().equals("-inputFile") & !nonType.group().equals("-outputFile")) {
+                System.out.println("\"" + nonType.group() + "\" is not a valid parameter. It will be skipped.");
+            }
+        }
+
+        if (toFile.find()) {
+            inputFileName = toFile.group(2);
+            File infile = new File(inputFileName);
+            try {
+                infile.createNewFile();
+            } catch (IOException e) {
+
+            }
+        }
+        if (outFile.find()) {
+            outputFileName = outFile.group(2);
+            File outfile = new File(outputFileName);
+            try {
+                outfile.createNewFile();
+            } catch (IOException e) {
+
+            }
+        }
+
+        switch (enter) {
                 case "long": if (type.equals("byCount")) {
                     sortLongByCount(); break;
                 } else sortLong();
@@ -45,17 +85,16 @@ public class Main {
     public static void sortLong(){
         Scanner scanner = new Scanner(System.in);
         ArrayList<Long> enter = new ArrayList<>();
-        int k = 0;
-        while (scanner.hasNextLong()) {
-            long number = scanner.nextLong();
-            enter.add(number);
+        String any;
+        while (scanner.hasNext()) {
+            any = scanner.next();
+            if (any.matches("-?\\d+")) {
+                enter.add(Long.valueOf(any));
+            } else System.out.println("\"" + any + "\" is not a long. It will be skipped.");
+
         }
         enter.sort(Comparator.naturalOrder());
-        for (Long aLong : enter) {
-            if (Objects.equals(aLong, enter.get(0))) k++;
-        }
         System.out.println("Total numbers: " + enter.size() + ".");
-       // System.out.println("The greatest number: " + enter.get(0) + " (" + k + " time(s), " + k*100/enter.size() + "%).");
         System.out.print("Sorted data:");
         for (Long aLong : enter) {
             System.out.print(" " + aLong);
@@ -67,9 +106,12 @@ public class Main {
         ArrayList<Integer> enter = new ArrayList<>();
         ArrayList<Pair> count = new ArrayList<>();
         Map<Integer, Integer> sort = new LinkedHashMap<>();
-        while (scanner.hasNextInt()) {
-            int number = scanner.nextInt();
-            enter.add(number);
+        String any;
+        while (scanner.hasNext()) {
+            any = scanner.next();
+            if (any.matches("-?\\d+")) {
+                enter.add(Integer.parseInt(any));
+            } else System.out.println("\"" + any + "\" is not a long. It will be skipped.");
         }
         System.out.println("Total numbers: " + enter.size() + ".");
         for (int i = 0; i < enter.size(); i++) {
@@ -92,7 +134,6 @@ public class Main {
     public static void sortLine() {
         Scanner scanner = new Scanner(System.in);
         ArrayList<String> enter = new ArrayList<>();
-        int k = 0;
         String longest = "";
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
@@ -101,18 +142,12 @@ public class Main {
         for (String s : enter) {
             if (s.length() > longest.length()) longest = s;
         }
-        for (String s : enter) {
-            if (s.equals(longest)) k++;
-        }
         enter.sort(Comparator.naturalOrder());
         System.out.println("Total lines: " + enter.size() + ".");
         System.out.println("Sorted data:");
         for (String s : enter) {
             System.out.println(" " + s);
         }
-       /* System.out.println("The longest line:");
-        System.out.println(longest);
-        System.out.println("(" + k + " time(s), " + k*100/ enter.size() + "%).");*/
     }
     public static void sortLineByCount() {
         Scanner scanner = new Scanner(System.in);
@@ -143,7 +178,6 @@ public class Main {
     }
     public static void sortWord() {
         Scanner scanner = new Scanner(System.in);
-        int k = 0;
         ArrayList<String> enter = new ArrayList<>();
         String longest = "";
         while (scanner.hasNextLine()) {
@@ -154,12 +188,8 @@ public class Main {
         for (String s : enter) {
             if (s.length() > longest.length()) longest = s;
         }
-        for (String s : enter) {
-            if (s.equals(longest)) k++;
-        }
         enter.sort(Comparator.naturalOrder());
         System.out.println("Total words: " + enter.size() + ".");
-       // System.out.println("The longest word: " + longest + " (" + k +" time(s), " + k*100/ enter.size() + "%).");
         System.out.print("Sorted data:");
         for (String s : enter) {
             System.out.print(" " + s);
@@ -191,21 +221,6 @@ public class Main {
         }
         for (Map.Entry<String, Integer> entry : sort.entrySet()) {
             System.out.println(entry.getKey() + ": " + entry.getValue() + " time(s), " + entry.getValue()*100/enter.size() + "%");
-        }
-    }
-    public static void sortInt() {
-        Scanner scanner = new Scanner(System.in);
-        ArrayList<Long> enter = new ArrayList<>();
-        int k = 0;
-        while (scanner.hasNextLong()) {
-            long number = scanner.nextLong();
-            enter.add(number);
-        }
-        enter.sort(Comparator.naturalOrder());
-        System.out.println("Total numbers: " + enter.size() + ".");
-        System.out.print("Sorted data:");
-        for (Long aLong : enter) {
-            System.out.print(" " + aLong);
         }
     }
 }
